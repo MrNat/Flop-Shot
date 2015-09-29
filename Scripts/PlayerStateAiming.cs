@@ -15,6 +15,7 @@ public class PlayerStateAiming : RoundState
 	private Vector3 shotFullVector;
 	private Vector3 shotLateralVector;
 	private Vector3 shotInitForwardVector;
+	private float camPosRatio = 0.0f;
 
 	// Reference to main camera
 	private Camera mainCam;
@@ -28,7 +29,7 @@ public class PlayerStateAiming : RoundState
 	private Vector3 cameraPosition;
 	
 	// Inspector Variables
-	public Vector3 relativeDisplacement = new Vector3(0, 2, 4);
+	public Vector3 relativeDisplacement = new Vector3(2, 2, 4);
 	public float cameraMinHeight = 0.0f;
 	public float cameraMaxHeight = 10.0f;
 	public float cameraSmoothDamping = 6.5f;
@@ -63,7 +64,6 @@ public class PlayerStateAiming : RoundState
 		//Debug.color
 		Debug.DrawRay(player.transform.position, shotFullVector * 100, Color.red);
 
-		CalculateCameraPosition(player);
 
 
 
@@ -71,6 +71,16 @@ public class PlayerStateAiming : RoundState
 		//Debug.Log (horizontalRotation);
 		owner.arc.GeneratePoints(0, -verticalRotation / shotAngleVerticalMax, 100, 65, player.transform.position, -horizontalRotation+90);
 		owner.arc.DrawMarker(GetHitMarker());
+
+
+		
+		CalculateCameraPosition(player);
+	}
+
+	void OnDrawGizmos()
+	{
+		Gizmos.color = Color.red;
+		Gizmos.DrawSphere (cameraPosition, 1f);
 	}
 
 	public override void OnEnter()
@@ -114,7 +124,13 @@ public class PlayerStateAiming : RoundState
 		
 		// Clamp vertical rotation
 		verticalRotation = Mathf.Clamp(verticalRotation, -shotAngleVerticalMax, 0);
-		
+
+
+
+		// Camera Input
+		camPosRatio += -Input.GetAxis("CameraVertical") * 0.02f;
+		//Debug.Log (-Input.GetAxis("CameraVertical"));
+		camPosRatio = Mathf.Clamp(camPosRatio, 0.0f, 1f);
 	}
 
 	
@@ -143,15 +159,25 @@ public class PlayerStateAiming : RoundState
 		
 		
 		// Camera Position
-		cameraPosition = player.transform.position;
+		float ratioBetweenPoints = camPosRatio * (owner.arc.positionPoints.Count);
+		int pointAIndex = Mathf.FloorToInt(ratioBetweenPoints);
+		int pointBIndex = pointAIndex + 1;
+
+		if (pointAIndex > owner.arc.positionPoints.Count - 2)
+		{
+			pointAIndex = owner.arc.positionPoints.Count - 2;
+			pointBIndex = owner.arc.positionPoints.Count - 1;
+		}
+
+		//cameraPosition = player.transform.position;
+		cameraPosition = Vector3.Lerp(owner.arc.positionPoints[pointAIndex], owner.arc.positionPoints[pointBIndex], ratioBetweenPoints - pointAIndex);
 		cameraPosition += lateralRotation * Vector3.back * (relativeDisplacement.z + cameraViewHeight);		// Move back
 		cameraPosition += lateralRotation * Vector3.right * relativeDisplacement.x;								// Move to side
 		cameraPosition += cameraViewHeight * Vector3.up * relativeDisplacement.y;								// Move up
 		
 		// LookAt Position
-		cameraLookAtPosition = player.transform.position;
-		cameraLookAtPosition += lateralRotation * Vector3.forward * cameraViewHeight * relativeDisplacement.z; // Look slightly ahead of player
-
+		cameraLookAtPosition = owner.arc.GetHitMarkerPosition();
+		//cameraLookAtPosition += lateralRotation * Vector3.forward * cameraViewHeight * relativeDisplacement.z; // Look slightly ahead of player
 
 
 		mainCam.transform.position = cameraPosition;
