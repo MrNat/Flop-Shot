@@ -8,17 +8,11 @@ public class PlayerArc
 	public List<Vector3> positionPoints;
 
 	// Precision Properties
-	public int numPoints = 400;
+	public int numPoints = 70;
 
 	private RaycastHit lastHit;
 	private bool lastHitActive = false;
 
-	// Knuckle Properties
-	/*
-	public float curve = 0;
-	public float height = 3.5f;
-	public float distance = 30;
-	*/
 
 	public PlayerArc()
 	{
@@ -99,7 +93,7 @@ public class PlayerArc
 
 		// Timestep
 		float t = 0;
-		float step = (Mathf.PI * 2) / numPoints;
+		float step = (Mathf.PI) / numPoints;
 		int currentPoint = 0;
 
 		bool hitObject = false;
@@ -108,7 +102,7 @@ public class PlayerArc
 			// Step forward
 			t += step;
 
-			if (t > Mathf.PI * 2) // *2
+			if (t > (Mathf.PI)) // *2
 			{
 				hitObject = true;
 				break;
@@ -137,7 +131,7 @@ public class PlayerArc
 				//Debug.Log ("Raycast hit!");
 				hitObject = true;
 				//return points;
-				break;
+				//break;
 			}
 			else
 			{
@@ -150,6 +144,7 @@ public class PlayerArc
 			}
 
 		}
+
 
 		return points;
 

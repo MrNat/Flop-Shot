@@ -17,12 +17,16 @@ public class RoundEventManager : StateMachine
 	// Reference to Camera Manager
 	public CameraManager cameraManager;
 
-	public List<Vector3> launchPoints;
+	// Player Arc Generator
+	public PlayerArc arc;
 
 	void Awake()
 	{
 		//cameraManager = GameManager.Instance.cameraManager;
-		
+
+		// Init Arc
+		arc = new PlayerArc();
+
 		// Init list
 		playerList = new List<PlayerData>();
 
@@ -102,11 +106,11 @@ public class RoundEventManager : StateMachine
 
 	public void SetPoints(List<Vector3> points)
 	{
-		launchPoints = points;
+		arc.positionPoints = points;
 	}
 
 	public List<Vector3> GetPoints()
 	{
-		return launchPoints;
+		return arc.positionPoints;
 	}
 }

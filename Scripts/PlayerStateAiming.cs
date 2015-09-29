@@ -33,16 +33,10 @@ public class PlayerStateAiming : RoundState
 	public float cameraMaxHeight = 10.0f;
 	public float cameraSmoothDamping = 6.5f;
 
-	// ARC
-	private PlayerArc arc;
-
 
 	protected override void Awake()
 	{
 		mainCam = Camera.main;
-
-		arc = new PlayerArc();
-
 		ResetShot();
 
 		base.Awake();
@@ -75,8 +69,8 @@ public class PlayerStateAiming : RoundState
 
 		// Update ARC
 		//Debug.Log (horizontalRotation);
-		arc.GeneratePoints(0, -verticalRotation / shotAngleVerticalMax, 100, 65, player.transform.position, -horizontalRotation+90);
-		arc.DrawMarker(GetHitMarker());
+		owner.arc.GeneratePoints(0, -verticalRotation / shotAngleVerticalMax, 100, 65, player.transform.position, -horizontalRotation+90);
+		owner.arc.DrawMarker(GetHitMarker());
 	}
 
 	public override void OnEnter()
@@ -93,7 +87,7 @@ public class PlayerStateAiming : RoundState
 		//Debug.Log (player);
 		Debug.Log ("exiting aiming");
 
-		owner.SetPoints(arc.GetPoints());
+		//owner.SetPoints(arc.GetPoints());
 		base.OnExit();
 	}
 
