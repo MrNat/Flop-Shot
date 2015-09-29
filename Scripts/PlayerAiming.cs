@@ -56,7 +56,7 @@ public class PlayerAiming : MonoBehaviour
 	{
 		if (Input.GetKeyUp("space") || Input.GetButtonUp("Submit"))
 		{
-			GameManager.Instance.cameraManager.ChangeAngle(CameraAngle.LaunchAngle);
+			//GameManager.Instance.cameraManager.ChangeAngle(CameraAngle.LaunchAngle);
 		}
 	}
 

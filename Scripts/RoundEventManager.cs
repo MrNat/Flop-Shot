@@ -43,8 +43,8 @@ public class RoundEventManager : StateMachine
 		//Debug.Log (GetActivePlayer().gameObject);
 
 		// Set Camera Angle
-		cameraManager.SetTarget(currentActivePlayer.gameObj);
-		cameraManager.ChangeAngle(CameraAngle.AimingAngle);
+		//cameraManager.SetTarget(currentActivePlayer.gameObj);
+		//cameraManager.ChangeAngle(CameraAngle.AimingAngle);
 
 		
 		ChangeState<PlayerStateAiming>();
@@ -75,7 +75,7 @@ public class RoundEventManager : StateMachine
 		currentActivePlayer = player;
 
 		// Switch Camera
-		GameManager.Instance.cameraManager.SetTarget(currentActivePlayer.gameObj);
+		//GameManager.Instance.cameraManager.SetTarget(currentActivePlayer.gameObj);
 
 		Debug.Log("Current Player is now: " + currentActivePlayer.ID);
 	}

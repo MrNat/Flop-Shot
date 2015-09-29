@@ -20,18 +20,18 @@ public class PlayerArc
 	}
 
 
-	public void GeneratePoints(float curve, float percentage, float range, float h, Vector3 position, float rotation)
+	public void GeneratePoints(float curve, float range, float height, Vector3 position, float rotation)
 	{
 		// Calculate Height and Distance
-		float distance = Mathf.Lerp(range * 1.5f, range, percentage);
-		float height = Mathf.Lerp(0.1f, h, percentage);
+		//float distance = Mathf.Lerp(range * 1.5f, range, percentage);
+		//float height = Mathf.Lerp(0.1f, h, percentage);
 		//float distance = Mathf.Clamp(range + ((range / 2) * (1- percentage)), range / 2, 1.5f * range);
 		//float height = Mathf.Clamp(h * percentage, 0.01f, h);
 
 		// Generate Points
 		//List<Vector3> knucklePoints = GenerateKnucklePath(curve, height, distance);
 		//List<Vector3> parabolaPoints = GenerateParabolaPath(curve, height, distance);
-		List<Vector3> rocketPoints = GenerateRocketPath(curve, height, distance, position, rotation);
+		List<Vector3> rocketPoints = GenerateRocketPath(curve, height, range, position, rotation);
 
 		// Interpolate
 		//positionPoints.Clear();
@@ -187,6 +187,14 @@ public class PlayerArc
 		marker.transform.Rotate(Vector3.right * 90);
 		marker.transform.Translate(Vector3.up * 0.005f);
 		
+	}
+
+	public Vector3 GetHitMarkerPosition()
+	{
+		if (!lastHitActive)
+			return new Vector3(0, 0, 0);
+
+		return lastHit.point;
 	}
 
 	public List<Vector3> GetPoints()

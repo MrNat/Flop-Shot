@@ -23,7 +23,7 @@ public class PlayerData
 
 
 	// Reference to Player Scripts
-	public PlayerAiming scriptAiming;
+	//public PlayerAiming scriptAiming;
 
 	public PlayerData(GameObject player)
 	{
