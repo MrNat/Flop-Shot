@@ -15,42 +15,30 @@ public class PlayerStateAiming : RoundState
 	private float rotation = 0.0f;
 
 	private float camPosRatio = 0.0f;
+	private float camRotation = 0.0f;
 
 	// Reference to main camera
 	private Camera mainCam;
 
-	
-	// Current camera properties
-	private float cameraViewHeight = 0f;
-	
+
 	//private float cameraRotation = 0.0f;
 	private Vector3 cameraLookAtPosition;
 	private Vector3 cameraPosition;
 	
 	// Inspector Variables
-	public Vector3 relativeDisplacement = new Vector3(0, 2, 4);
+	//public Vector3 relativeDisplacement = new Vector3(0, 2, 4);
+	private float cameraFollowDistance = 6f;
+	private float cameraFollowHeight = 4f;
 	public float cameraSmoothDamping = 6.5f;
 
 
 	protected override void Awake()
 	{
-		mainCam = Camera.main;
-		ResetShot();
 
-		base.Awake();
 	}
 
 	void Update()
 	{
-		if (Input.GetKeyUp("space") || Input.GetButtonUp("Submit"))
-		{
-			owner.ChangeState<PlayerStateLaunch>();
-		}
-
-
-		//Debug.Log ( owner.GetActivePlayer());
-		//Debug.Log (player);
-
 		// See if user is pressing buttons
 		HandleRotationInput();
 
@@ -61,7 +49,7 @@ public class PlayerStateAiming : RoundState
 		// Update ARC
 		//Debug.Log (horizontalRotation);
 		owner.arc.GeneratePoints(0, GetRange(), height, player.transform.position, -rotation+90);
-		owner.arc.DrawMarker(GetHitMarker());
+		owner.arc.DrawMarker(GetHitMarker(), rotation);
 	}
 
 	void LateUpdate()
@@ -78,17 +66,22 @@ public class PlayerStateAiming : RoundState
 
 	public override void OnEnter()
 	{
-		// Reset all the variables
+		Debug.Log("Entering Aiming State");
+
+		mainCam = Camera.main;
 		ResetShot();
 
-		Debug.Log (player);
+		// Subscribe to input
+		EventInputBroadcaster.OnSubmitUpAction += ConfirmShot;
+
+		
+		base.Awake();
 	}
 
 	public override void OnExit()
-	{
-		//nextState.SavePlayerRotation(GetLateralRotation());
-		//Debug.Log (player);
-		Debug.Log ("exiting aiming");
+	{	
+		// Unsubscribe
+		EventInputBroadcaster.OnSubmitUpAction -= ConfirmShot;
 
 		//owner.SetPoints(arc.GetPoints());
 		base.OnExit();
@@ -102,6 +95,10 @@ public class PlayerStateAiming : RoundState
 		rotation = 0.0f;
 	}
 
+	void ConfirmShot()
+	{
+		owner.ChangeState<PlayerStatePower>();
+	}
 
 	// HANDLE USER INPUT FOR AIMING
 	void HandleRotationInput()
@@ -121,8 +118,18 @@ public class PlayerStateAiming : RoundState
 		if (Input.GetKey("k"))
 			camPosRatio -= factor;
 
-
 		camPosRatio = Mathf.Clamp01(camPosRatio);
+
+
+		float rotFactor = 1f;
+		camRotation += Input.GetAxis("CameraHorizontal") * rotFactor;
+		if (Input.GetKey("j"))
+			camRotation += rotFactor;
+		if (Input.GetKey("l"))
+			camRotation -= rotFactor;
+
+		camRotation = Mathf.Clamp (camRotation, -50, 50);
+
 	}
 
 	void CalculateHeight()
@@ -147,7 +154,9 @@ public class PlayerStateAiming : RoundState
 
 		//cameraPosition = player.transform.position;
 		cameraPosition = Vector3.Lerp(owner.arc.positionPoints[pointAIndex], owner.arc.positionPoints[pointBIndex], ratioBetweenPoints - pointAIndex);
-		cameraPosition += Vector3.up * relativeDisplacement.y;
+		cameraPosition += Vector3.up * cameraFollowHeight;
+		cameraPosition += Quaternion.Euler(0, camRotation + rotation, 0) * Vector3.back * cameraFollowDistance;
+		//cameraPosition += Vector3.up * relativeDisplacement.y;
 		//cameraPosition += lateralRotation * Vector3.back * (relativeDisplacement.z + cameraViewHeight);		// Move back
 		//cameraPosition += lateralRotation * Vector3.right * relativeDisplacement.x;								// Move to side
 		//cameraPosition += cameraViewHeight * Vector3.up * relativeDisplacement.y;								// Move up

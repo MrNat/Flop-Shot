@@ -30,51 +30,20 @@ public class PlayerStateLaunch : RoundState
 
 	public override void OnEnter()
 	{
+		Debug.Log("Entering Launch State");
+
 		mainCam = Camera.main;
 
 		positionPoints = owner.GetPoints();
 		base.OnEnter();
+
+		StartCoroutine("FollowPoints");
 	}
 
 	public void SavePlayerRotation(Quaternion rotation)
 	{
 		lateralRotation = rotation;
 	}
-
-	void Update()
-	{
-		if (Input.GetKeyUp("a"))
-			owner.ChangeState<PlayerStateAiming>();
-
-		if (Input.GetKeyUp("t"))
-		{
-			StartCoroutine("FollowPoints");
-		}
-
-		//CalculateCameraPosition();
-	}
-
-	/*
-	public override void Reason(GameObject player, PlayerStateManager system)
-	{
-		if (Input.GetKeyUp("space"))
-		{
-			//system.SetTransition(Transition.NullTransition);
-		}
-	}
-	*/
-	/*
-	public override void Act(GameObject player)
-	{
-		CalculateCameraPosition(player);
-	}
-
-
-	public override void DoBeforeEntering()
-	{
-
-	}
-	*/
 
 	IEnumerator FollowPoints()
 	{
@@ -116,6 +85,10 @@ public class PlayerStateLaunch : RoundState
 		Vector3 diff = positionPoints[positionPoints.Count-1] - positionPoints[positionPoints.Count-2];
 		Debug.Log (diff);
 		playerBody.AddForce (diff * 4000);
+
+		// Temp
+		yield return new WaitForSeconds(3);
+		owner.ChangeState<PlayerStateAiming>();
 	}
 
 

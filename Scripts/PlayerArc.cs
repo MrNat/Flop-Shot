@@ -176,7 +176,7 @@ public class PlayerArc
 		return p;
 	}
 
-	public void DrawMarker(GameObject marker)
+	public void DrawMarker(GameObject marker, float rotation)
 	{
 		if (!lastHitActive)
 			return;
@@ -185,6 +185,7 @@ public class PlayerArc
 		marker.transform.rotation = Quaternion.LookRotation(lastHit.normal);
 			
 		marker.transform.Rotate(Vector3.right * 90);
+		marker.transform.Rotate(Vector3.up * rotation);
 		marker.transform.Translate(Vector3.up * 0.005f);
 		
 	}

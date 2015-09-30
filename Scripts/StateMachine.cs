@@ -33,7 +33,6 @@ public class StateMachine : MonoBehaviour
 		where T : State
 	{
 		currentState = GetState<T>();
-		Debug.Log ("state changed");
 	}
 
 

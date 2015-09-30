@@ -19,6 +19,7 @@ public class RoundEventManager : StateMachine
 
 	// Player Arc Generator
 	public PlayerArc arc;
+	public float power;
 
 	void Awake()
 	{
@@ -40,11 +41,6 @@ public class RoundEventManager : StateMachine
 
 		// for now, default to player one going first
 		SwitchActivePlayer(1);
-		//Debug.Log (GetActivePlayer().gameObject);
-
-		// Set Camera Angle
-		//cameraManager.SetTarget(currentActivePlayer.gameObj);
-		//cameraManager.ChangeAngle(CameraAngle.AimingAngle);
 
 		
 		ChangeState<PlayerStateAiming>();
