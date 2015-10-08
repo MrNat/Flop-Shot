@@ -84,7 +84,7 @@ public class PlayerStateLaunch : RoundState
 		// Once at the end of the trail
 		Vector3 diff = positionPoints[positionPoints.Count-1] - positionPoints[positionPoints.Count-2];
 		Debug.Log (diff);
-		playerBody.AddForce (diff * 4000);
+		playerBody.AddForce (diff * 2000);
 
 		// Temp
 		yield return new WaitForSeconds(3);

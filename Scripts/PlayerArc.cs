@@ -14,13 +14,16 @@ public class PlayerArc
 	private bool lastHitActive = false;
 
 
+	private PlayerMeshGenerator meshGen = new PlayerMeshGenerator();
+
+
 	public PlayerArc()
 	{
 		positionPoints = new List<Vector3>();
 	}
 
 
-	public void GeneratePoints(float curve, float range, float height, Vector3 position, float rotation)
+	public void GeneratePoints(float curve, float range, float height, float hRatio, Vector3 position, float rotation)
 	{
 		// Calculate Height and Distance
 		//float distance = Mathf.Lerp(range * 1.5f, range, percentage);
@@ -31,7 +34,7 @@ public class PlayerArc
 		// Generate Points
 		//List<Vector3> knucklePoints = GenerateKnucklePath(curve, height, distance);
 		//List<Vector3> parabolaPoints = GenerateParabolaPath(curve, height, distance);
-		List<Vector3> rocketPoints = GenerateRocketPath(curve, height, range, position, rotation);
+		List<Vector3> rocketPoints = GenerateRocketPath(curve, height, hRatio, range, position, rotation);
 
 		// Interpolate
 		//positionPoints.Clear();
@@ -46,6 +49,8 @@ public class PlayerArc
 			//Debug.DrawLine(parabolaPoints[i], parabolaPoints[i+1], Color.cyan);
 			Debug.DrawLine(rocketPoints[i], rocketPoints[i+1], Color.green);
 		}
+
+		meshGen.GenerateMesh(positionPoints);
 	}
 
 	private List<Vector3> GenerateKnucklePath(float curve, float height, float distance)
@@ -85,7 +90,7 @@ public class PlayerArc
 	}
 
 	
-	private List<Vector3> GenerateRocketPath(float curve, float height, float distance, Vector3 playerPosition, float rotation)
+	private List<Vector3> GenerateRocketPath(float curve, float height, float hRatio, float distance, Vector3 playerPosition, float rotation)
 	{
 		List<Vector3> points = new List<Vector3>();
 		points.Add(playerPosition);
@@ -110,7 +115,7 @@ public class PlayerArc
 
 
 			// Generate the next point
-			Vector3 nextPoint = GenerateRocketPoint(curve, height, distance, t, playerPosition, rotation);
+			Vector3 nextPoint = GenerateRocketPoint(curve, height, hRatio, distance, t, playerPosition, rotation);
 			Vector3 prevPoint = points[currentPoint];
 
 			// Calculate difference between current and next point
@@ -164,14 +169,15 @@ public class PlayerArc
 		*/
 	}
 
-	private Vector3 GenerateRocketPoint(float curve, float height, float distance, float t, Vector3 playerPosition, float rotation)
+	private Vector3 GenerateRocketPoint(float curve, float height, float hRatio, float distance, float t, Vector3 playerPosition, float rotation)
 	{
 		float radRotation = rotation * Mathf.Deg2Rad;
 
 		float xCoord = (t) * (distance / 2.5f) * Mathf.Cos(radRotation); //curve * (t / (Mathf.PI * 2)) * Mathf.Cos(radRotation);
 		float zCoord = (t) * (distance / 2.5f) * Mathf.Sin(radRotation);
 		float yCoord = (-1.66f*Mathf.Pow(t, 4) + 8.71f*Mathf.Pow(t, 3) + -16.72f*Mathf.Pow (t, 2) + 13.29f*t + 0.03f) * (height / 3.5f);
-		
+		yCoord = Mathf.Lerp(0, yCoord, hRatio);
+
 		Vector3 p = new Vector3(xCoord, yCoord, zCoord) + playerPosition;
 		return p;
 	}

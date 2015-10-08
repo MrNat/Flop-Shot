@@ -7,7 +7,7 @@ public class PlayerStateAiming : RoundState
 	public float userRotateSpeed = 0.75f;
 
 	public float maxRange = 100.0f;
-	public float minRange = 0.5f;
+	public float minRange = 4f;
 
 	// Aiming Variables
 	private float range = 10.0f; // default
@@ -16,6 +16,10 @@ public class PlayerStateAiming : RoundState
 
 	private float camPosRatio = 0.0f;
 	private float camRotation = 0.0f;
+
+	// Height control
+	private float heightRatio = 0.5f;
+	private float heightSpeed = 0.2f;
 
 	// Reference to main camera
 	private Camera mainCam;
@@ -48,7 +52,7 @@ public class PlayerStateAiming : RoundState
 
 		// Update ARC
 		//Debug.Log (horizontalRotation);
-		owner.arc.GeneratePoints(0, GetRange(), height, player.transform.position, -rotation+90);
+		owner.arc.GeneratePoints(0, GetRange(), height, heightRatio, player.transform.position, -rotation+90);
 		owner.arc.DrawMarker(GetHitMarker(), rotation);
 	}
 
@@ -106,9 +110,11 @@ public class PlayerStateAiming : RoundState
 		// Add axis input to rotation
 		rotation += Input.GetAxis("Horizontal") * userRotateSpeed;
 
-		range += Input.GetAxis("Vertical") * userRotateSpeed;
+		range += Input.GetAxis("Vertical") * userRotateSpeed / 2;
 		range = Mathf.Clamp(range, minRange, maxRange);
 
+		heightRatio += Input.GetAxis("ArcHeight") * heightSpeed;
+		heightRatio = Mathf.Clamp01(heightRatio);
 
 		// Camera Input
 		float factor = 0.005f;
