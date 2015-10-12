@@ -16,6 +16,7 @@ public class PlayerStateLaunch : RoundState
 	public float timeToEnd = 3.0f;
 	private float startTime = 0.0f;
 	private float timeRatio = 0.0f;
+	private float speed = 15f; // m/s
 
 	
 	// Positions
@@ -47,11 +48,16 @@ public class PlayerStateLaunch : RoundState
 
 	IEnumerator FollowPoints()
 	{
+		playerBody = player.GetComponent<Rigidbody>();
+
+		// Put spin on the ball
+		playerBody.AddTorque(new Vector3(100, 0, 0));
+
+		// Follow points
 		startTime = 0.0f;
-		timeToEnd = positionPoints.Count * 0.06f; // 60ms per segment
+		timeToEnd = owner.arc.CalculateArcLength() / speed;
 		timeRatio = 0.0f;
 
-		playerBody = player.GetComponent<Rigidbody>();
 
 		bool inRange = true;
 
@@ -73,18 +79,30 @@ public class PlayerStateLaunch : RoundState
 				yield return null;
 			}
 
-			//Debug.Log (positionPoints[i]);
-			playerBody.MovePosition(Vector3.Lerp(positionPoints[startPositionPoint], positionPoints[nextPositionPoint], ratioBetweenPoints - startPositionPoint));
-			
+			// Find points
+			Vector3 pointA = positionPoints[startPositionPoint];
+			Vector3 pointB = positionPoints[nextPositionPoint];
+
+			RaycastHit hit;
+			if (playerBody.SweepTest(pointB - pointA, out hit, (pointB - pointA).magnitude * 2))
+			{
+				Debug.Log ("Hit");
+				break;
+			}
+			else
+			{
+				playerBody.MovePosition(Vector3.Lerp(pointA, pointB, ratioBetweenPoints - startPositionPoint));
+			}
+
 			CalculateCameraPosition();
 
 			yield return null;
 		}
 
 		// Once at the end of the trail
-		Vector3 diff = positionPoints[positionPoints.Count-1] - positionPoints[positionPoints.Count-2];
+		Vector3 diff = (positionPoints[positionPoints.Count-1] - positionPoints[positionPoints.Count-2]) * 10000;
 		Debug.Log (diff);
-		playerBody.AddForce (diff * 2000);
+		playerBody.AddForce (diff);
 
 		// Temp
 		yield return new WaitForSeconds(3);

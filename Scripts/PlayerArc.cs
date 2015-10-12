@@ -25,71 +25,18 @@ public class PlayerArc
 
 	public void GeneratePoints(float curve, float range, float height, float hRatio, Vector3 position, float rotation)
 	{
-		// Calculate Height and Distance
-		//float distance = Mathf.Lerp(range * 1.5f, range, percentage);
-		//float height = Mathf.Lerp(0.1f, h, percentage);
-		//float distance = Mathf.Clamp(range + ((range / 2) * (1- percentage)), range / 2, 1.5f * range);
-		//float height = Mathf.Clamp(h * percentage, 0.01f, h);
-
-		// Generate Points
-		//List<Vector3> knucklePoints = GenerateKnucklePath(curve, height, distance);
-		//List<Vector3> parabolaPoints = GenerateParabolaPath(curve, height, distance);
 		List<Vector3> rocketPoints = GenerateRocketPath(curve, height, hRatio, range, position, rotation);
-
-		// Interpolate
-		//positionPoints.Clear();
-		//positionPoints = rocketPoints;
 		positionPoints = rocketPoints;
 
-
-		//for (int i = 0; i < numPoints-1; i++)
+		// Debug draw
 		for (int i = 0; i < rocketPoints.Count-1; i++)
 		{
-			//Debug.DrawLine(knucklePoints[i], knucklePoints[i+1], Color.blue);
-			//Debug.DrawLine(parabolaPoints[i], parabolaPoints[i+1], Color.cyan);
 			Debug.DrawLine(rocketPoints[i], rocketPoints[i+1], Color.green);
 		}
 
 		meshGen.GenerateMesh(positionPoints);
 	}
 
-	private List<Vector3> GenerateKnucklePath(float curve, float height, float distance)
-	{
-		List<Vector3> points = new List<Vector3>();
-
-		for (float t = 0; t < Mathf.PI*2; t += (Mathf.PI*2 / numPoints))
-		{
-			// Coordinate Values
-			float xCoord = curve * (t / (Mathf.PI * 2));
-			float zCoord = (t / 6) * distance;
-			float yCoord = (Mathf.Sin (t - (Mathf.PI / 2))+1) * (height / 2);
-
-			Vector3 p = new Vector3(xCoord, yCoord, zCoord);
-			points.Add(p);
-		}
-
-		return points;
-	}
-
-	private List<Vector3> GenerateParabolaPath(float curve, float height, float distance)
-	{
-		List<Vector3> points = new List<Vector3>();
-		
-		for (float t = -Mathf.PI; t < Mathf.PI; t += (Mathf.PI * 2) / numPoints)
-		{
-			// Coordinate Values
-			float xCoord = curve * (t / (Mathf.PI * 2));
-			float zCoord = ((t / (Mathf.PI * 2)) + 0.5f) * distance;
-			float yCoord = ((-t * t) + 10) * (height / 10);
-			
-			Vector3 p = new Vector3(xCoord, yCoord, zCoord);
-			points.Add(p);
-		}
-
-		return points;
-	}
-
-	
 	private List<Vector3> GenerateRocketPath(float curve, float height, float hRatio, float distance, Vector3 playerPosition, float rotation)
 	{
 		List<Vector3> points = new List<Vector3>();
@@ -152,21 +99,6 @@ public class PlayerArc
 
 
 		return points;
-
-		/*
-		for (float t = 0; t < Mathf.PI*2; t += (Mathf.PI*2 / numPoints))
-		{
-			// Coordinate Values
-			float xCoord = curve * (t / (Mathf.PI * 2));
-			float zCoord = (t) * (distance / 2.5f);
-			float yCoord = (-1.66f*Mathf.Pow(t, 4) + 8.71f*Mathf.Pow(t, 3) + -16.72f*Mathf.Pow (t, 2) + 13.29f*t + 0.03f) * (height / 3.5f);
-			
-			Vector3 p = new Vector3(xCoord, yCoord, zCoord);
-			points.Add(p);
-		}
-		
-		return points;
-		*/
 	}
 
 	private Vector3 GenerateRocketPoint(float curve, float height, float hRatio, float distance, float t, Vector3 playerPosition, float rotation)
@@ -194,6 +126,18 @@ public class PlayerArc
 		marker.transform.Rotate(Vector3.up * rotation);
 		marker.transform.Translate(Vector3.up * 0.005f);
 		
+	}
+
+	public float CalculateArcLength()
+	{
+		float total = 0;
+		for (int i = 0; i < positionPoints.Count-1; i++)
+		{
+			Vector3 diff = positionPoints[i+1] - positionPoints[i];
+			total += diff.magnitude;
+		}
+
+		return total;
 	}
 
 	public Vector3 GetHitMarkerPosition()
