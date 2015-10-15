@@ -11,7 +11,6 @@ public class PlayerStateAiming : RoundState
 
 	// Aiming Variables
 	private float range = 10.0f; // default
-	private float height = 10.0f; // default
 	private float rotation = 0.0f;
 
 	private float camPosRatio = 0.0f;
@@ -35,10 +34,18 @@ public class PlayerStateAiming : RoundState
 	private float cameraFollowHeight = 4f;
 	public float cameraSmoothDamping = 6.5f;
 
+	// Sound FX
+	public AudioClip clickSound;
+	private AudioSource clickSource;
+	private float prevRotation = 0.0f;
+	private float prevRange = 0.0f;
+
 
 	protected override void Awake()
 	{
-
+		clickSound = Resources.Load("Sounds/HiHat1") as AudioClip;
+		clickSource = Camera.main.GetComponent<AudioSource>();
+		clickSource.clip = clickSound;
 	}
 
 	void Update()
@@ -46,13 +53,19 @@ public class PlayerStateAiming : RoundState
 		// See if user is pressing buttons
 		HandleRotationInput();
 
-		CalculateHeight();
+		// Temp, adjust cutoffRatio
+		if (Input.GetKey ("m"))
+			owner.arc.cutoffRatio += 0.1f;
+		if (Input.GetKey ("n"))
+			owner.arc.cutoffRatio -= 0.1f;
+		if (Input.GetKeyUp ("b"))
+			Debug.Log (owner.arc.cutoffRatio);
 
-
+		owner.arc.cutoffRatio = Mathf.Clamp01 (owner.arc.cutoffRatio);
 
 		// Update ARC
 		//Debug.Log (horizontalRotation);
-		owner.arc.GeneratePoints(0, GetRange(), height, heightRatio, player.transform.position, -rotation+90);
+		owner.arc.GeneratePoints(GetRange(), heightRatio, player.transform.position, -rotation+90);
 		owner.arc.DrawMarker(GetHitMarker(), rotation);
 	}
 
@@ -78,6 +91,9 @@ public class PlayerStateAiming : RoundState
 		// Subscribe to input
 		EventInputBroadcaster.OnSubmitUpAction += ConfirmShot;
 
+		// Sound
+		prevRange = range;
+		prevRange = rotation;
 		
 		base.Awake();
 	}
@@ -114,6 +130,11 @@ public class PlayerStateAiming : RoundState
 		range = Mathf.Clamp(range, minRange, maxRange);
 
 		heightRatio += Input.GetAxis("ArcHeight") * heightSpeed;
+		if (Input.GetKey("x"))
+			heightRatio += heightSpeed;
+		if (Input.GetKey("z"))
+			heightRatio -= heightSpeed;
+
 		heightRatio = Mathf.Clamp01(heightRatio);
 
 		// Camera Input
@@ -136,12 +157,20 @@ public class PlayerStateAiming : RoundState
 
 		camRotation = Mathf.Clamp (camRotation, -50, 50);
 
-	}
 
-	void CalculateHeight()
-	{
-		// Height is exponential to range
-		height = Mathf.Pow(2, range / 20);
+		// Play sound
+		float rangeDiff = Mathf.Abs(range - prevRange);
+		float rotDiff = Mathf.Abs(rotation - prevRotation);
+
+		float dRa = 1.5f;
+		float dRo = 2.5f;
+		if ((rangeDiff > dRa) || (rotDiff > dRo))
+		{
+			clickSource.PlayOneShot(clickSound, 0.03f);
+
+			prevRange = range;
+			prevRotation = rotation;
+		}
 	}
 
 

@@ -23,7 +23,7 @@ public class RoundEventManager : StateMachine
 
 	void Awake()
 	{
-		//cameraManager = GameManager.Instance.cameraManager;
+		cameraManager = Camera.main.GetComponent<CameraManager>();
 
 		// Init Arc
 		arc = new PlayerArc();

@@ -16,7 +16,7 @@ public class PlayerMeshGenerator
 			vertices[i] = points[i] - cross;
 			vertices[points.Count + i] = points[i] + cross;
 
-			Debug.DrawLine(vertices[i], vertices[points.Count + i]);
+			//Debug.DrawLine(vertices[i], vertices[points.Count + i]);
 			//vertices[i] = points[i];
 			//vertices[points.Count + i] = points[i];
 		}

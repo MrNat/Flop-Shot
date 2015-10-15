@@ -4,7 +4,7 @@ using System.Collections;
 public class RoundState : State
 {
 	protected RoundEventManager owner;
-	public CameraManager cameraManager { get { return owner.cameraManager; } }
+	//public CameraManager cameraManager { get { return owner.cameraManager; } }
 
 	protected virtual void Awake()
 	{

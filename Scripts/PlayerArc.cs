@@ -10,6 +10,14 @@ public class PlayerArc
 	// Precision Properties
 	public int numPoints = 70;
 
+	// Arc properties
+	private float range = 0.0f;
+	private float height = 0.0f;
+
+	public float cutoffRatio = 0.65f;
+	private float heightRatio = 1.0f;
+	private float rangeRatio = 1.0f;
+
 	private RaycastHit lastHit;
 	private bool lastHitActive = false;
 
@@ -17,27 +25,63 @@ public class PlayerArc
 	private PlayerMeshGenerator meshGen = new PlayerMeshGenerator();
 
 
+	// Temp dots
+	private List<GameObject> dots = new List<GameObject>();
+
 	public PlayerArc()
 	{
 		positionPoints = new List<Vector3>();
+
+		// Gen temp points
+		for (int i = 0; i < 15; i++)
+		{
+			GameObject c = GameObject.CreatePrimitive(PrimitiveType.Cube);
+			c.transform.localScale = new Vector3(0.2f, 0.2f, 0.2f);
+			c.transform.position = new Vector3(0, -900, 0);
+			c.layer = LayerMask.NameToLayer("Ignore Raycast");
+
+			dots.Add(c);
+		}
 	}
 
 
-	public void GeneratePoints(float curve, float range, float height, float hRatio, Vector3 position, float rotation)
+	public void GeneratePoints(float r, float hRatio, Vector3 position, float rotation)
 	{
-		List<Vector3> rocketPoints = GenerateRocketPath(curve, height, hRatio, range, position, rotation);
+		range = r;
+		height = Mathf.Pow(2, range / 20);
+
+		heightRatio = hRatio;
+
+		List<Vector3> rocketPoints = GenerateRocketPath(position, rotation);
 		positionPoints = rocketPoints;
 
 		// Debug draw
 		for (int i = 0; i < rocketPoints.Count-1; i++)
 		{
-			Debug.DrawLine(rocketPoints[i], rocketPoints[i+1], Color.green);
+			float ratio = (float)i / (float)(rocketPoints.Count-1);
+
+			if (ratio < cutoffRatio)
+				Debug.DrawLine(rocketPoints[i], rocketPoints[i+1], Color.green);
+			else
+				Debug.DrawLine(rocketPoints[i], rocketPoints[i+1], Color.red);
 		}
 
-		meshGen.GenerateMesh(positionPoints);
+		//meshGen.GenerateMesh(positionPoints);
+
+		// Draw temp points
+		for (int c = 0; c < dots.Count; c++)
+		{
+			int spacing = 5;
+			int index = c * spacing + 5;
+
+			if (index > rocketPoints.Count-1)
+				break;
+			else
+				dots[c].transform.position = rocketPoints[index];
+		}
 	}
 
-	private List<Vector3> GenerateRocketPath(float curve, float height, float hRatio, float distance, Vector3 playerPosition, float rotation)
+	private List<Vector3> GenerateRocketPath(Vector3 playerPosition, float rotation)
 	{
 		List<Vector3> points = new List<Vector3>();
 		points.Add(playerPosition);
@@ -62,7 +106,7 @@ public class PlayerArc
 
 
 			// Generate the next point
-			Vector3 nextPoint = GenerateRocketPoint(curve, height, hRatio, distance, t, playerPosition, rotation);
+			Vector3 nextPoint = GenerateRocketPoint(playerPosition, rotation, t);
 			Vector3 prevPoint = points[currentPoint];
 
 			// Calculate difference between current and next point
@@ -101,14 +145,14 @@ public class PlayerArc
 		return points;
 	}
 
-	private Vector3 GenerateRocketPoint(float curve, float height, float hRatio, float distance, float t, Vector3 playerPosition, float rotation)
+	private Vector3 GenerateRocketPoint(Vector3 playerPosition, float rotation, float t)
 	{
 		float radRotation = rotation * Mathf.Deg2Rad;
 
-		float xCoord = (t) * (distance / 2.5f) * Mathf.Cos(radRotation); //curve * (t / (Mathf.PI * 2)) * Mathf.Cos(radRotation);
-		float zCoord = (t) * (distance / 2.5f) * Mathf.Sin(radRotation);
+		float xCoord = (t) * (range / 2.5f) * Mathf.Cos(radRotation); //curve * (t / (Mathf.PI * 2)) * Mathf.Cos(radRotation);
+		float zCoord = (t) * (range / 2.5f) * Mathf.Sin(radRotation);
 		float yCoord = (-1.66f*Mathf.Pow(t, 4) + 8.71f*Mathf.Pow(t, 3) + -16.72f*Mathf.Pow (t, 2) + 13.29f*t + 0.03f) * (height / 3.5f);
-		yCoord = Mathf.Lerp(0, yCoord, hRatio);
+		yCoord = Mathf.Lerp(0, yCoord*2, heightRatio);
 
 		Vector3 p = new Vector3(xCoord, yCoord, zCoord) + playerPosition;
 		return p;

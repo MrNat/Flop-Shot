@@ -56,45 +56,10 @@ public class PlayerStatePower : RoundState
 	{
 		if (!poweringUp)
 			return;
+		else
+			owner.cameraManager.CreateShakeImpulse(0.2f, 0.05f);
 
 		float timeElapsed = Time.time - powerStartTime;
 		powerBar.fillAmount = Mathf.Clamp(timeElapsed * powerRate, 0, 100) / 100;
 	}
-
-	/*
-	void Update()
-	{
-		// Input
-		if (!poweringUp)
-		{
-			if (Input.GetKeyDown("space"))
-			{
-				power = 0;
-				poweringUp = true;
-			}
-		}
-		else
-		{
-			if (Input.GetKey("space"))
-			{
-				power += powerRate;
-			}
-			if (Input.GetKeyUp("space"))
-			{
-				power = Mathf.Clamp(power, 0, 100);
-
-				Debug.Log ("POW: " + power);
-				poweringUp = false;
-
-				// Change State
-				owner.power = power;
-				owner.ChangeState<PlayerStateLaunch>();
-			}
-		}
-
-
-		// Render bar
-		powerBar.fillAmount = power / 100;
-	}
-	*/
 }

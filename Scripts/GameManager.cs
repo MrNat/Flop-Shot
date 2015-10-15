@@ -41,9 +41,6 @@ public class GameManager : MonoBehaviour
 	// Current Game State
 	private GameState currentGameState;
 
-	// Reference to Camera Manager
-	public CameraManager cameraManager;
-
 	// Reference to Round Manager
 	public RoundEventManager roundManager;
 	
