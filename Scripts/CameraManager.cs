@@ -5,6 +5,12 @@ using System.Collections;
 // Switch between camera angles
 public class CameraManager : MonoBehaviour
 {
+	// Movement
+	public Vector3 desiredPosition = new Vector3(0, 0, 0);
+	public Vector3 lookAtPosition = new Vector3(0, 0, 0);
+	public float moveSpeed = 3.5f;
+	public float rotateSpeed = 0.5f;
+
 	// Camera Shake
 	public float shakeAmplitude;
 
@@ -14,26 +20,33 @@ public class CameraManager : MonoBehaviour
 
 	void Awake()
 	{
-		// Default to aiming angle
-		//ChangeAngle(CameraAngle.AimingAngle);
+
 	}
 
 	void LateUpdate()
 	{
+		// Lerp to desired position
+		//UpdateTransform();
+		
+		transform.position = Vector3.Lerp(transform.position, desiredPosition, moveSpeed * Time.smoothDeltaTime);
+		transform.rotation = Quaternion.Lerp(transform.rotation, Quaternion.LookRotation(lookAtPosition - transform.position), moveSpeed * Time.smoothDeltaTime);
 
 		// Update Shake
 		UpdateCameraShake();
-
-
-
-		if (Input.GetKeyUp("f"))
-		{
-			CreateShakeImpulse(0.25f, 0.3f);
-		}
 	}
 
-	// CAMERA SHAKE (might move to separate class later)
+	// MOVEMENT
+	public void SetPosition(Vector3 pos)
+	{
+		transform.position = pos;
+	}
 
+	public void UpdateTransform()
+	{
+	}
+
+
+	// CAMERA SHAKE (might move to separate class later)
 	public void CreateShakeImpulse(float duration, float amplitude)
 	{
 		// Assign variables

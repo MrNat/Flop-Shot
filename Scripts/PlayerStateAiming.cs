@@ -20,9 +20,6 @@ public class PlayerStateAiming : RoundState
 	private float heightRatio = 0.5f;
 	private float heightSpeed = 0.2f;
 
-	// Reference to main camera
-	private Camera mainCam;
-
 
 	//private float cameraRotation = 0.0f;
 	private Vector3 cameraLookAtPosition;
@@ -32,7 +29,6 @@ public class PlayerStateAiming : RoundState
 	//public Vector3 relativeDisplacement = new Vector3(0, 2, 4);
 	private float cameraFollowDistance = 6f;
 	private float cameraFollowHeight = 4f;
-	public float cameraSmoothDamping = 6.5f;
 
 	// Sound FX
 	public AudioClip clickSound;
@@ -67,11 +63,9 @@ public class PlayerStateAiming : RoundState
 		//Debug.Log (horizontalRotation);
 		owner.arc.GeneratePoints(GetRange(), heightRatio, player.transform.position, -rotation+90);
 		owner.arc.DrawMarker(GetHitMarker(), rotation);
-	}
 
-	void LateUpdate()
-	{
 		
+		// Camera
 		CalculateCameraPosition(player);
 	}
 
@@ -85,7 +79,6 @@ public class PlayerStateAiming : RoundState
 	{
 		Debug.Log("Entering Aiming State");
 
-		mainCam = Camera.main;
 		ResetShot();
 
 		// Subscribe to input
@@ -191,19 +184,13 @@ public class PlayerStateAiming : RoundState
 		cameraPosition = Vector3.Lerp(owner.arc.positionPoints[pointAIndex], owner.arc.positionPoints[pointBIndex], ratioBetweenPoints - pointAIndex);
 		cameraPosition += Vector3.up * cameraFollowHeight;
 		cameraPosition += Quaternion.Euler(0, camRotation + rotation, 0) * Vector3.back * cameraFollowDistance;
-		//cameraPosition += Vector3.up * relativeDisplacement.y;
-		//cameraPosition += lateralRotation * Vector3.back * (relativeDisplacement.z + cameraViewHeight);		// Move back
-		//cameraPosition += lateralRotation * Vector3.right * relativeDisplacement.x;								// Move to side
-		//cameraPosition += cameraViewHeight * Vector3.up * relativeDisplacement.y;								// Move up
 		
 		// LookAt Position
 		cameraLookAtPosition = owner.arc.GetHitMarkerPosition();
-		//cameraLookAtPosition += lateralRotation * Vector3.forward * cameraViewHeight * relativeDisplacement.z; // Look slightly ahead of player
 
 
-		mainCam.transform.position = cameraPosition;
-		//mainCam.transform.position = Vector3.Lerp(mainCam.transform.position, cameraPosition, Time.deltaTime * cameraSmoothDamping);
-		mainCam.transform.rotation = Quaternion.Lerp (mainCam.transform.rotation, Quaternion.LookRotation(cameraLookAtPosition - mainCam.transform.position), Time.deltaTime * cameraSmoothDamping);
+		owner.cameraManager.desiredPosition = cameraPosition;
+		owner.cameraManager.lookAtPosition = cameraLookAtPosition;
 	}
 
 

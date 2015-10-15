@@ -16,13 +16,13 @@ public class PlayerArc
 
 	public float cutoffRatio = 0.65f;
 	private float heightRatio = 1.0f;
-	private float rangeRatio = 1.0f;
+	//private float rangeRatio = 1.0f;
 
 	private RaycastHit lastHit;
 	private bool lastHitActive = false;
 
 
-	private PlayerMeshGenerator meshGen = new PlayerMeshGenerator();
+	//private PlayerMeshGenerator meshGen = new PlayerMeshGenerator();
 
 
 	// Temp dots

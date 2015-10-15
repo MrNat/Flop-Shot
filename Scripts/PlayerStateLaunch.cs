@@ -139,7 +139,6 @@ public class PlayerStateLaunch : RoundState
 		}
 
 		// Once at the end of the trail
-		//Vector3 diff = (positionPoints[positionPoints.Count-1] - positionPoints[positionPoints.Count-2]) * 10000;
 		Vector3 diff = (positionPoints [endPoint] - positionPoints [endPoint-1]) * 12500;
 		Debug.Log (diff);
 		playerBody.AddForce (diff);
@@ -148,10 +147,6 @@ public class PlayerStateLaunch : RoundState
 		playerBody.useGravity = true;
 		tracking = false;
 		updating = true;
-
-		// Temp
-		//yield return new WaitForSeconds(3);
-		//owner.ChangeState<PlayerStateAiming>();
 	}
 
 
@@ -164,9 +159,8 @@ public class PlayerStateLaunch : RoundState
 
 
 		// Apply position and rotation
-		mainCam.transform.position = Vector3.Lerp(startPos, endPos, timeRatio);
-		//mainCam.transform.position = Vector3.Lerp(mainCam.transform.position, desiredPosition, Time.deltaTime * smoothDamping);
-		mainCam.transform.rotation = Quaternion.Lerp(mainCam.transform.rotation, Quaternion.LookRotation(lookAtPosition - mainCam.transform.position), Time.deltaTime * smoothDamping);
+		owner.cameraManager.desiredPosition = Vector3.Lerp(startPos, endPos, timeRatio);
+		owner.cameraManager.lookAtPosition = lookAtPosition;
 	}
 
 	Vector3 RelativePosition(Vector3 position, Vector3 relative)

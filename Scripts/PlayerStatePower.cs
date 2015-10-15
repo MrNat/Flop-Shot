@@ -20,6 +20,9 @@ public class PlayerStatePower : RoundState
 		EventInputBroadcaster.OnSubmitDownAction += StartPoweringUp;
 		EventInputBroadcaster.OnSubmitUpAction += StopPoweringUp;
 
+		// Re-position camera
+		owner.cameraManager.desiredPosition = player.transform.position + new Vector3(0.5f, 2.5f, -3.5f);
+		owner.cameraManager.lookAtPosition = player.transform.position;
 
 		base.OnEnter();
 	}
