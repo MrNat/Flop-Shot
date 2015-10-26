@@ -9,7 +9,7 @@ public class CameraManager : MonoBehaviour
 	public Vector3 desiredPosition = new Vector3(0, 0, 0);
 	public Vector3 lookAtPosition = new Vector3(0, 0, 0);
 	public float moveSpeed = 3.5f;
-	public float rotateSpeed = 0.5f;
+	public float rotateSpeed = 17.5f;
 
 	// Camera Shake
 	public float shakeAmplitude;
@@ -25,9 +25,6 @@ public class CameraManager : MonoBehaviour
 
 	void LateUpdate()
 	{
-		// Lerp to desired position
-		//UpdateTransform();
-		
 		transform.position = Vector3.Lerp(transform.position, desiredPosition, moveSpeed * Time.smoothDeltaTime);
 		transform.rotation = Quaternion.Lerp(transform.rotation, Quaternion.LookRotation(lookAtPosition - transform.position), moveSpeed * Time.smoothDeltaTime);
 

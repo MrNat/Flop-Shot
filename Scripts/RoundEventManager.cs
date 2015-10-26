@@ -18,7 +18,7 @@ public class RoundEventManager : StateMachine
 	public CameraManager cameraManager;
 
 	// Player Arc Generator
-	public PlayerArc arc;
+	public ArcCurve arc;
 	public float power;
 
 	void Awake()
@@ -26,7 +26,7 @@ public class RoundEventManager : StateMachine
 		cameraManager = Camera.main.GetComponent<CameraManager>();
 
 		// Init Arc
-		arc = new PlayerArc();
+		arc = new ArcCurve();
 
 		// Init list
 		playerList = new List<PlayerData>();
@@ -98,15 +98,5 @@ public class RoundEventManager : StateMachine
 			SwitchActivePlayer(1);
 		else
 			SwitchActivePlayer(currentActivePlayer.ID + 1);
-	}
-
-	public void SetPoints(List<Vector3> points)
-	{
-		arc.positionPoints = points;
-	}
-
-	public List<Vector3> GetPoints()
-	{
-		return arc.positionPoints;
 	}
 }

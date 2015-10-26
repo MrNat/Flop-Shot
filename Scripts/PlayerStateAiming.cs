@@ -1,5 +1,6 @@
 ﻿using UnityEngine;
 using System.Collections;
+using System.Collections.Generic;
 
 public class PlayerStateAiming : RoundState
 {
@@ -27,14 +28,16 @@ public class PlayerStateAiming : RoundState
 	
 	// Inspector Variables
 	//public Vector3 relativeDisplacement = new Vector3(0, 2, 4);
-	private float cameraFollowDistance = 6f;
-	private float cameraFollowHeight = 4f;
+	//private float cameraFollowDistance = 6f;
+	//private float cameraFollowHeight = 4f;
 
 	// Sound FX
 	public AudioClip clickSound;
 	private AudioSource clickSource;
 	private float prevRotation = 0.0f;
 	private float prevRange = 0.0f;
+
+	private List<Vector3> points;
 
 
 	protected override void Awake()
@@ -60,9 +63,21 @@ public class PlayerStateAiming : RoundState
 		owner.arc.cutoffRatio = Mathf.Clamp01 (owner.arc.cutoffRatio);
 
 		// Update ARC
+		//owner.arc.SetProperties(50, 0.5f, player.transform.position, -rotation + 90);
+		owner.arc.SetProperties(range, heightRatio, player.transform.position, -rotation + 90);
+		LineRenderer line = player.GetComponent<LineRenderer>();
+
+		points = owner.arc.GenerateFullPath(3);
+		line.SetVertexCount(points.Count);
+
+		for (int i = 0; i < points.Count; i++)
+		{
+			line.SetPosition(i, points[i]);
+		}
 		//Debug.Log (horizontalRotation);
-		owner.arc.GeneratePoints(GetRange(), heightRatio, player.transform.position, -rotation+90);
-		owner.arc.DrawMarker(GetHitMarker(), rotation);
+		//owner.arc.GeneratePoints(GetRange(), heightRatio, player.transform.position, -rotation+90);
+		//owner.arc.DrawMarker(GetHitMarker(), rotation);
+		//owner.arc.GenerateFullPath();
 
 		
 		// Camera
@@ -72,7 +87,11 @@ public class PlayerStateAiming : RoundState
 	void OnDrawGizmos()
 	{
 		Gizmos.color = Color.red;
-		Gizmos.DrawSphere (cameraPosition, 1f);
+
+		for (int i = 0; i < points.Count; i++)
+		{
+			Gizmos.DrawSphere(points[i], 1.0f);
+		}
 	}
 
 	public override void OnEnter()
@@ -138,7 +157,7 @@ public class PlayerStateAiming : RoundState
 		if (Input.GetKey("k"))
 			camPosRatio -= factor;
 
-		camPosRatio = Mathf.Clamp01(camPosRatio);
+		camPosRatio = Mathf.Clamp(camPosRatio, 0.05f, 0.75f);
 
 
 		float rotFactor = 1f;
@@ -169,24 +188,23 @@ public class PlayerStateAiming : RoundState
 
 	void CalculateCameraPosition(GameObject player)
 	{
-		// Camera Position
-		float ratioBetweenPoints = camPosRatio * (owner.arc.positionPoints.Count);
-		int pointAIndex = Mathf.FloorToInt(ratioBetweenPoints);
-		int pointBIndex = pointAIndex + 1;
+		// Find arc vector
+		Vector3 diff = owner.arc.Evaluate(camPosRatio) - owner.arc.Evaluate(camPosRatio-0.05f);
+		Vector3 rot = Quaternion.Euler(0, rotation, camRotation) * Vector3.right;
+		Vector3 camPos = Vector3.Cross(diff, rot).normalized * 2;
 
-		if (pointAIndex > owner.arc.positionPoints.Count - 2)
-		{
-			pointAIndex = owner.arc.positionPoints.Count - 2;
-			pointBIndex = owner.arc.positionPoints.Count - 1;
-		}
+		Debug.DrawLine(owner.arc.Evaluate(camPosRatio), owner.arc.Evaluate(camPosRatio)-diff*10, Color.cyan);
+		Debug.DrawLine(owner.arc.Evaluate(camPosRatio), owner.arc.Evaluate(camPosRatio)+rot*10, Color.red);
+		Debug.DrawLine(owner.arc.Evaluate(camPosRatio), owner.arc.Evaluate(camPosRatio)+camPos*5, Color.green);
+
 
 		//cameraPosition = player.transform.position;
-		cameraPosition = Vector3.Lerp(owner.arc.positionPoints[pointAIndex], owner.arc.positionPoints[pointBIndex], ratioBetweenPoints - pointAIndex);
-		cameraPosition += Vector3.up * cameraFollowHeight;
-		cameraPosition += Quaternion.Euler(0, camRotation + rotation, 0) * Vector3.back * cameraFollowDistance;
+		cameraPosition = camPos*6 + owner.arc.Evaluate(camPosRatio);
+		//cameraPosition += Vector3.up * cameraFollowHeight;
+		//cameraPosition += Quaternion.Euler(0, camRotation + rotation, 0) * Vector3.back * cameraFollowDistance;
 		
 		// LookAt Position
-		cameraLookAtPosition = owner.arc.GetHitMarkerPosition();
+		cameraLookAtPosition = owner.arc.finalPoint;
 
 
 		owner.cameraManager.desiredPosition = cameraPosition;

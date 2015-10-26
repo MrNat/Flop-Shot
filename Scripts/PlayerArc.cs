@@ -21,7 +21,7 @@ public class PlayerArc
 	private RaycastHit lastHit;
 	private bool lastHitActive = false;
 
-
+	private LineRenderer line;
 	//private PlayerMeshGenerator meshGen = new PlayerMeshGenerator();
 
 
@@ -30,6 +30,8 @@ public class PlayerArc
 
 	public PlayerArc()
 	{
+		line = GameObject.FindGameObjectWithTag("ArcMesh").GetComponent<LineRenderer>();
+
 		positionPoints = new List<Vector3>();
 
 		// Gen temp points
@@ -69,6 +71,7 @@ public class PlayerArc
 		//meshGen.GenerateMesh(positionPoints);
 
 		// Draw temp points
+		/*
 		for (int c = 0; c < dots.Count; c++)
 		{
 			int spacing = 5;
@@ -78,6 +81,12 @@ public class PlayerArc
 				break;
 			else
 				dots[c].transform.position = rocketPoints[index];
+		}
+		*/
+		line.SetVertexCount(rocketPoints.Count);
+		for (int i = 0; i < rocketPoints.Count; i++)
+		{
+			line.SetPosition(i, rocketPoints[i]);
 		}
 	}
 

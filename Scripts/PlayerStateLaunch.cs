@@ -11,12 +11,11 @@ public class PlayerStateLaunch : RoundState
 	public Vector3 relativeLookAtPosition = new Vector3(0, 0, 0); //new Vector3(1, 3, 1);
 	
 	public float smoothDamping = 5.0f;
-	public int FOV = 100;
+	//public int FOV = 100;
 
-	public float timeToEnd = 3.0f;
-	private float startTime = 0.0f;
-	private float timeRatio = 0.0f;
-	private float speed = 15f; // m/s
+	//private float startTime = 0.0f;
+	//private float endTime = 0.0f;
+	//private float speed = 15f; // m/s
 
 
 	
@@ -27,12 +26,19 @@ public class PlayerStateLaunch : RoundState
 	private Quaternion lateralRotation;
 	public Camera mainCam;
 
-	private List<Vector3> positionPoints;
 	private Rigidbody playerBody;
 
 
-	private bool tracking = true;
 	private bool updating = false;
+
+
+	// Debug Stats
+	private PlayerCollision playerCol;
+
+	// Launch Velocity
+	private float launchForce;
+	private Vector3 launchVector;
+
 
 	public override void OnEnter()
 	{
@@ -40,18 +46,71 @@ public class PlayerStateLaunch : RoundState
 
 		mainCam = Camera.main;
 
-		positionPoints = owner.GetPoints();
+		playerCol = player.GetComponent<PlayerCollision>();
+
 		base.OnEnter();
 
-		StartCoroutine("FollowPoints");
+		// Begin Following
+		CalculateLaunchVector();
+		StartLaunching();
+	}
+
+	void CalculateLaunchVector()
+	{
+		float range = owner.arc.distance;
+		float g = 9.81f;//Mathf.Abs(Physics.gravity.y);
+
+		
+		Vector3 testPointA = owner.arc.Evaluate(0.0f);
+		Vector3 testPointB = owner.arc.Evaluate(0.01f);
+
+		float dY = testPointA.y - testPointB.y;
+		float dX = Vector3.Distance(new Vector3(testPointB.x, 0, testPointB.z), new Vector3(testPointA.x, 0, testPointA.z));
+		float angle = Mathf.Abs(Mathf.Atan2(dY, dX) * Mathf.Rad2Deg);
+
+		float radAngle = angle * Mathf.Deg2Rad;
+
+		launchForce = (Mathf.Sqrt(range) * Mathf.Sqrt(g)) / Mathf.Sqrt(Mathf.Sin(2 * radAngle));
+		//Debug.Log ("Num: " + (Mathf.Sqrt(range) * Mathf.Sqrt(g)));
+		//Debug.Log ("Den: " + Mathf.Sqrt(Mathf.Sin(2 * radAngle)));
+
+		//float lat = launchForce * Mathf.Cos(angle);
+		//float rot = owner.arc.rotation * Mathf.Deg2Rad;
+		Vector3 diff = testPointB - testPointA;
+		launchVector = diff.normalized * launchForce;
+
+		//Debug.Log ("Launch angle: " + angle);
+		//Debug.Log ("Launch force: " + launchForce);
+	}
+
+	void StartLaunching()
+	{
+		// Set variables
+		//startTime = Time.time;
+		//endTime = startTime + (owner.arc.ArcLength() / speed);
+
+		// Disable player gravity
+		playerBody = player.GetComponent<Rigidbody>();
+
+		/*
+		Vector3 testPointA = owner.arc.Evaluate(0.0f);
+		Vector3 testPointB = owner.arc.Evaluate(0.01f);
+
+		Vector3 diff = testPointB - testPointA;
+		//Vector3 mag = owner.arc.Evaluate(0.5f) - owner.arc.Evaluate(0.0f);
+		Vector3 force = diff.normalized * owner.arc.distance * 222;
+		*/
+		playerBody.AddForce(launchVector * playerBody.mass * 50);
+
+		// Debug
+		playerCol.MeasureDistance(playerBody.position, owner.arc.distance);
+		//Debug.Log("Launch mag.: " + force.magnitude);
+
+
 	}
 
 	void Update()
 	{
-		
-		if (!tracking)
-			CalculateCameraPosition();
-
 		if ((playerBody.velocity.magnitude <= 0.05f) && updating)
 		{
 			Invoke ("ResetState", 3.5f);
@@ -70,96 +129,18 @@ public class PlayerStateLaunch : RoundState
 		lateralRotation = rotation;
 	}
 
-	IEnumerator FollowPoints()
-	{
-		// Disable gravity while following points
-		playerBody = player.GetComponent<Rigidbody>();
-		playerBody.useGravity = false;
-		tracking = true;
-
-		// Add torque (temp)
-		playerBody.AddTorque(new Vector3(20000, 0, 0));
-
-		// Start following points
-		startTime = 0.0f;
-		timeToEnd = owner.arc.CalculateArcLength() / speed;
-		timeRatio = 0.0f;
-
-
-		bool inRange = true;
-
-		Debug.Log ("Points: " + positionPoints.Count);
-		Debug.Log ("Duration: " + timeToEnd);
-
-		int endPoint = 0;
-
-		while ((startTime <= timeToEnd) && inRange)
-		{
-			startTime += Time.deltaTime;
-			timeRatio = startTime / timeToEnd;
-
-			float ratioBetweenPoints = positionPoints.Count * timeRatio;
-			int startPositionPoint = Mathf.FloorToInt(ratioBetweenPoints);
-			int nextPositionPoint = startPositionPoint + 1;
-
-			if (nextPositionPoint >= positionPoints.Count-1)
-			{
-				inRange = false;
-				yield return null;
-			}
-
-			// Find points
-			Vector3 pointA = positionPoints[startPositionPoint];
-			Vector3 pointB = positionPoints[nextPositionPoint];
-
-			// Sweep test
-			RaycastHit hit;
-			if (playerBody.SweepTest(pointB - pointA, out hit, (pointB - pointA).magnitude * 2))
-			{
-				Debug.Log ("Hit");
-				endPoint = startPositionPoint;
-				break;
-			}
-			else
-			{
-				playerBody.MovePosition(Vector3.Lerp(pointA, pointB, ratioBetweenPoints - startPositionPoint));
-			}
-
-			// Cutoff Test
-			if (timeRatio >= owner.arc.cutoffRatio)
-			{
-				endPoint = startPositionPoint;
-				break;
-			}
-			
-			CalculateCameraPosition();
-
-			endPoint = startPositionPoint;
-			yield return null;
-		}
-
-		// Once at the end of the trail
-		Vector3 diff = (positionPoints [endPoint] - positionPoints [endPoint-1]) * 12500;
-		Debug.Log (diff);
-		playerBody.AddForce (diff);
-
-		// Re-enable gravity
-		playerBody.useGravity = true;
-		tracking = false;
-		updating = true;
-	}
-
 
 	void CalculateCameraPosition()
 	{
-		Vector3 startPos = RelativePosition(player.transform.position, relPositionStart);
-		Vector3 endPos = RelativePosition(player.transform.position, relPositionEnd);
+		//Vector3 startPos = RelativePosition(player.transform.position, relPositionStart);
+		//Vector3 endPos = RelativePosition(player.transform.position, relPositionEnd);
 
 		lookAtPosition = player.transform.position;
 
 
 		// Apply position and rotation
-		owner.cameraManager.desiredPosition = Vector3.Lerp(startPos, endPos, timeRatio);
+		//owner.cameraManager.SetPosition(Vector3.Lerp(startPos, endPos, timeRatio));
+		//owner.cameraManager.desiredPosition = Vector3.Lerp(startPos, endPos, timeRatio);
 		owner.cameraManager.lookAtPosition = lookAtPosition;
 	}
 
