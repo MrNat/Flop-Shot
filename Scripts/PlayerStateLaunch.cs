@@ -9,9 +9,11 @@ public class PlayerStateLaunch : RoundState
 	public Vector3 relPositionStart = new Vector3(-3f, -3.6f, -6f);
 	public Vector3 relPositionEnd = new Vector3(-4.5f, 9f, 6f);
 	public Vector3 relativeLookAtPosition = new Vector3(0, 0, 0); //new Vector3(1, 3, 1);
-	
-	public float smoothDamping = 5.0f;
-	//public int FOV = 100;
+
+	private float cutoffRatio = 0.35f;
+	private float startTime;
+	private float totalTime;
+	private Vector3 origPos;
 
 	//private float startTime = 0.0f;
 	//private float endTime = 0.0f;
@@ -47,11 +49,14 @@ public class PlayerStateLaunch : RoundState
 		mainCam = Camera.main;
 
 		playerCol = player.GetComponent<PlayerCollision>();
+		
+		playerBody = player.GetComponent<Rigidbody>();
 
 		base.OnEnter();
 
 		// Begin Following
 		CalculateLaunchVector();
+		StartParticles();
 		StartLaunching();
 	}
 
@@ -81,6 +86,14 @@ public class PlayerStateLaunch : RoundState
 
 		//Debug.Log ("Launch angle: " + angle);
 		//Debug.Log ("Launch force: " + launchForce);
+		totalTime = owner.arc.FlightTime(launchVector);
+		startTime = Time.time;
+	}
+
+	void StartParticles()
+	{
+
+		
 	}
 
 	void StartLaunching()
@@ -90,7 +103,8 @@ public class PlayerStateLaunch : RoundState
 		//endTime = startTime + (owner.arc.ArcLength() / speed);
 
 		// Disable player gravity
-		playerBody = player.GetComponent<Rigidbody>();
+		
+		origPos = playerBody.position;
 
 		/*
 		Vector3 testPointA = owner.arc.Evaluate(0.0f);
@@ -103,10 +117,7 @@ public class PlayerStateLaunch : RoundState
 		playerBody.AddForce(launchVector * playerBody.mass * 50);
 
 		// Debug
-		playerCol.MeasureDistance(playerBody.position, owner.arc.distance);
-		//Debug.Log("Launch mag.: " + force.magnitude);
-
-
+		//playerCol.MeasureHit(playerBody.position, owner.arc.distance, totalTime);
 	}
 
 	void Update()
@@ -117,6 +128,12 @@ public class PlayerStateLaunch : RoundState
 			updating = false;
 		}
 
+	}
+
+	void FixedUpdate()
+	{
+		
+		CalculateCameraPosition();
 	}
 
 	void ResetState()
@@ -132,25 +149,40 @@ public class PlayerStateLaunch : RoundState
 
 	void CalculateCameraPosition()
 	{
-		//Vector3 startPos = RelativePosition(player.transform.position, relPositionStart);
-		//Vector3 endPos = RelativePosition(player.transform.position, relPositionEnd);
+		Vector3 camPos;
+		Vector3 lookAt;
 
-		lookAtPosition = player.transform.position;
+		// Is the ball past the cutoff?
+		if (((Time.time - startTime) / totalTime) < cutoffRatio)
+		{
+			// Before cutoff
+			// stay behind the ball
 
+			camPos = RelativePosition(origPos, new Vector3(6, 4, 0), owner.arc.rotation);
+			lookAt = playerBody.position;
+		}
+		else
+		{
+			// be near goal
 
-		// Apply position and rotation
-		//owner.cameraManager.SetPosition(Vector3.Lerp(startPos, endPos, timeRatio));
-		//owner.cameraManager.desiredPosition = Vector3.Lerp(startPos, endPos, timeRatio);
-		owner.cameraManager.lookAtPosition = lookAtPosition;
+			camPos = RelativePosition(GameObject.FindGameObjectWithTag("Finish").transform.position, new Vector3(9, 6, -5), 0);
+			lookAt = playerBody.position;
+		}
+
+		owner.cameraManager.desiredPosition = camPos;
+		owner.cameraManager.lookAtPosition = lookAt;
 	}
 
-	Vector3 RelativePosition(Vector3 position, Vector3 relative)
+	Vector3 RelativePosition(Vector3 position, Vector3 relative, float rotation)
 	{
+		// Calc quaternion rotation
+		Quaternion latRot = Quaternion.Euler(0, rotation, 0);
+		
 		Vector3 newPos = position;
-		newPos += lateralRotation * Vector3.forward * relative.z;
-		newPos += lateralRotation * Vector3.right * relative.x;
+		newPos += latRot * Vector3.forward * relative.z;
+		newPos += latRot * Vector3.right * relative.x;
 		newPos += Vector3.up * relative.y;
-
+		
 		return newPos;
 	}
 }

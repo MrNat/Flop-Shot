@@ -16,13 +16,17 @@ public class PlayerStatePower : RoundState
 		Debug.Log ("Entering Power State");
 		powerBar = GameObject.FindGameObjectWithTag("PowerBar").GetComponent<Image>();
 
+
 		// Subscribe to Input Events
 		EventInputBroadcaster.OnSubmitDownAction += StartPoweringUp;
 		EventInputBroadcaster.OnSubmitUpAction += StopPoweringUp;
 
 		// Re-position camera
-		owner.cameraManager.desiredPosition = player.transform.position + new Vector3(0.5f, 2.5f, -3.5f);
+		owner.cameraManager.desiredPosition = RelativePosition(player.transform.position, new Vector3(6, 4, 0), owner.arc.rotation);
 		owner.cameraManager.lookAtPosition = player.transform.position;
+
+		// Stop showing the line
+		GameObject.Find ("PlayerOneBody").GetComponent<LineRenderer>().enabled = false;
 
 		base.OnEnter();
 	}
@@ -64,5 +68,18 @@ public class PlayerStatePower : RoundState
 
 		float timeElapsed = Time.time - powerStartTime;
 		powerBar.fillAmount = Mathf.Clamp(timeElapsed * powerRate, 0, 100) / 100;
+	}
+
+	Vector3 RelativePosition(Vector3 position, Vector3 relative, float rotation)
+	{
+		// Calc quaternion rotation
+		Quaternion latRot = Quaternion.Euler(0, rotation, 0);
+		
+		Vector3 newPos = position;
+		newPos += latRot * Vector3.forward * relative.z;
+		newPos += latRot * Vector3.right * relative.x;
+		newPos += Vector3.up * relative.y;
+		
+		return newPos;
 	}
 }

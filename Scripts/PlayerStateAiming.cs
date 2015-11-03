@@ -37,7 +37,7 @@ public class PlayerStateAiming : RoundState
 	private float prevRotation = 0.0f;
 	private float prevRange = 0.0f;
 
-	private List<Vector3> points;
+	private Vector3[] points;
 
 
 	protected override void Awake()
@@ -67,10 +67,10 @@ public class PlayerStateAiming : RoundState
 		owner.arc.SetProperties(range, heightRatio, player.transform.position, -rotation + 90);
 		LineRenderer line = player.GetComponent<LineRenderer>();
 
-		points = owner.arc.GenerateFullPath(3);
-		line.SetVertexCount(points.Count);
+		points = owner.arc.GenerateFullPath(0.17f);
+		line.SetVertexCount(owner.arc.finalPointIndex);
 
-		for (int i = 0; i < points.Count; i++)
+		for (int i = 0; i < owner.arc.finalPointIndex; i++)
 		{
 			line.SetPosition(i, points[i]);
 		}
@@ -88,7 +88,7 @@ public class PlayerStateAiming : RoundState
 	{
 		Gizmos.color = Color.red;
 
-		for (int i = 0; i < points.Count; i++)
+		for (int i = 0; i < owner.arc.finalPointIndex; i++)
 		{
 			Gizmos.DrawSphere(points[i], 1.0f);
 		}

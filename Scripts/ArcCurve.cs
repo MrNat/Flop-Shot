@@ -17,6 +17,20 @@ public class ArcCurve
 
 	public Vector3 finalPoint = new Vector3(0, 0, 0);
 
+	// Object Pool
+	private Vector3[] pointPool;
+	private int maxPoints = 100;
+	private int currentFreeIndex;
+	public int finalPointIndex;
+
+
+	public ArcCurve()
+	{
+		// Initialize point object pool
+		pointPool = new Vector3[maxPoints];
+		currentFreeIndex = 0;
+		finalPointIndex = 0;
+	}
 
 
 	public void SetProperties(float range, float hRatio, Vector3 playerPosition, float playerRotation)
@@ -44,10 +58,15 @@ public class ArcCurve
 	}
 
 
-	public List<Vector3> GenerateFullPath(float pointsPerDistance)
+	public Vector3[] GenerateFullPath(float pointsPerMeter)
 	{
-		List<Vector3> points = new List<Vector3>();
-		points.Add(position);
+		// Reset point pool
+		currentFreeIndex = 0;
+		finalPointIndex = 0;
+
+		// Add first point
+		pointPool[0] = position;
+		currentFreeIndex++;
 
 		bool calculating = true;
 		int step = 1;
@@ -55,31 +74,37 @@ public class ArcCurve
 		while(calculating)
 		{
 			// Calculate t
-			float arcLength = distance / 6;
-			float t = (1/(arcLength * pointsPerDistance)) * step;
+			float arcLength = ArcLength();
+			float t = (1/(arcLength * pointsPerMeter)) * step;
 
 			// Make point
 			Vector3 newPoint = Evaluate(t);
-			Vector3 prevPoint = points[step-1];
+			Vector3 prevPoint = pointPool[step-1];
 
 			// Test sweep
 			if (TestRaycast(prevPoint, newPoint))
 			{
-				points.Add(finalPoint);
+				pointPool[step] = finalPoint;
+				
+				finalPointIndex = step+1;
 				calculating = false;
 			}
 			else
 			{
-				points.Add(newPoint);
+				pointPool[step] = newPoint;
 			}
 
 			// Step
 			step++;
-			if ((step / (arcLength * pointsPerDistance)) > 1.2f)
+			//currentFreeIndex++;
+			if (((step / (arcLength * pointsPerMeter)) > 1.2f) || (step > maxPoints-1))
+			{
+				finalPointIndex = step;
 				calculating = false;
+			}
 		}
 
-		return points;
+		return pointPool;
 	}
 
 	private bool TestRaycast(Vector3 p1, Vector3 p2)
@@ -99,16 +124,25 @@ public class ArcCurve
 
 	public float ArcLength()
 	{
+		/*
 		// Estimate with 10 points
-		List<Vector3> points = GenerateFullPath(10);
+		Vector3[] points = GenerateFullPath(10);
 
 		float total = 0;
-		for (int i = 0; i < points.Count-1; i++)
+		for (int i = 0; i < finalPointIndex-1; i++)
 		{
 			Vector3 diff = points[i+1] - points[i];
 			total += diff.magnitude;
 		}
 
 		return total;
+		*/
+
+		return 2.32f * distance;
+	}
+
+	public float FlightTime(Vector3 vector)
+	{
+		return (2 * vector.y) / -Physics.gravity.y;
 	}
 }
